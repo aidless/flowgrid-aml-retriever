@@ -18,3 +18,19 @@ eval_out/
 eval_out_syn_l5l9/
 *.log
 eval_out*/
+
+
+# --- added by WorkBuddy takeover 2026-10-21 ---
+.env.*
+!.env.example
+!.env.template
+node_modules/
+*.pyc
+dist/
+build/
+*.egg-info/
+models/
+.regression_tmp/
+*.bak
+
+*.bak*

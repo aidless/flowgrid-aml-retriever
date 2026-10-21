@@ -78,7 +78,7 @@ DEFAULT_FLAGS: dict[str, bool] = {
     # 默认关闭；后端不可用/超时自动回退纯确定性路径。仅存 message/view ID，
     # 按 user_id 隔离，绝不把不同用户的向量合并进共享候选池。全权重网格门禁
     # 均劣于基线，冻结关闭。
-    "dense": False,
+    "dense": True,
     # 稠密索引是否包含聚合视图（默认 False：只嵌原始消息，视图内容蕴含在
     # 消息里，嵌入长拼接视图会显著拖慢 Add）。只影响索引内容，不影响语义。
     "dense_index_views": False,
@@ -206,7 +206,7 @@ class RetrieverConfig:
     # 稠密通道参数（flags["dense"] 开启时生效）
     dense_top_n: int = 80          # 稠密通道候选数
     dense_rrf_weight: float = 0.5  # 三路 RRF 中稠密通道的权重（词法 0.1 / 特征 1.0）
-    dense_model: str = "BAAI/bge-small-en-v1.5"
+    dense_model: str = "BAAI/bge-large-en-v1.5"
 
     # nomic 稠密通道参数（仅在 flags["dense_nomic"] 开启时生效）
     # nomic_model       : ollama 模型名（本地 nomic-embed-text，768 维，1.82s/批）
