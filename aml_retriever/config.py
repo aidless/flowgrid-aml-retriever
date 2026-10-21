@@ -78,7 +78,7 @@ DEFAULT_FLAGS: dict[str, bool] = {
     # 默认关闭；后端不可用/超时自动回退纯确定性路径。仅存 message/view ID，
     # 按 user_id 隔离，绝不把不同用户的向量合并进共享候选池。全权重网格门禁
     # 均劣于基线，冻结关闭。
-    "dense": True,
+    "dense": False,
     # 稠密索引是否包含聚合视图（默认 False：只嵌原始消息，视图内容蕴含在
     # 消息里，嵌入长拼接视图会显著拖慢 Add）。只影响索引内容，不影响语义。
     "dense_index_views": False,
