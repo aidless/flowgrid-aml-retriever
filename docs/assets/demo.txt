@@ -1,0 +1,14 @@
+# captured 2026-10-25 from: python3 examples/demo_add_search.py (rc=0, 125 ms)
+# raw stdout; docs/assets/demo.gif is a curated view
+
+current launch: returned 3 (of 5 candidates)
+  1. [2026-08-21] user: Update: the launch date is now August 21, 2026.
+  2. [2026-08-14] user: The launch date moved to August 14, 2026. Owner: Lin Tao. assistant: Noted the August 14 date and Lin Tao as owner.
+
+owner: returned 3 (of 4 candidates)
+  1. Noted the August 14 date and Lin Tao as owner.
+  2. The launch date moved to August 14, 2026. Owner: Lin Tao.
+
+isolation: bob sees 0 hits
+
+demo: 3 messages · 2 searches · 1 isolation check · no server, no API key

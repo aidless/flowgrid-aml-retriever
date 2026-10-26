@@ -1,4 +1,6 @@
-# just-agent
+# flowgrid-aml-retriever
+
+> 仓库：`flowgrid-aml-retriever` · 服务名：`just-agent`。
 
 面向 [Agent Memory Leaderboard](https://agentmemories.ai/leaderboard/) 的确定性、
 证据优先记忆检索系统。
@@ -9,6 +11,20 @@
 just-agent 实现记忆系统需要提供的两个操作：同步 `Add` 与按用户隔离的
 `Search`。系统保存每一条原始消息，建立可追溯的检索视图，并返回按相关性排序的来源
 证据；它不生成最终答案。
+
+## 60 秒 demo
+
+不需要起服务、不需要 API key、不需要第三方包，数据库在内存里：
+
+```bash
+git clone https://github.com/aidless/flowgrid-aml-retriever.git
+cd flowgrid-aml-retriever
+python3 examples/demo_add_search.py
+```
+
+![Add/Search 终端 demo](docs/assets/demo.gif)
+
+demo 写入 3 条消息，检索更新后的发布日期和负责人，并验证另一个用户查到 0 条。完整的 HTTP 契约与 254 项测试见下方 quick start。
 
 ## 提交状态
 
@@ -62,8 +78,8 @@ HTTP wrapper 与检索引擎分层：协议变化集中在 `api.py` 和 `server.
 环境要求：Python 3.11+，且 Python 的 `sqlite3` 已启用 FTS5。
 
 ```bash
-git clone https://github.com/aidless/just-agent.git
-cd just-agent
+git clone https://github.com/aidless/flowgrid-aml-retriever.git
+cd flowgrid-aml-retriever
 
 # 环境检查、150 项单测、CLI 自检、31 项 HTTP smoke
 ./scripts/run_tests.sh

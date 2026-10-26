@@ -1,4 +1,6 @@
-# just-agent
+# flowgrid-aml-retriever
+
+> Repository: `flowgrid-aml-retriever` · service name: `just-agent`.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -12,6 +14,22 @@ just-agent implements the two operations required from a memory
 system: synchronous `Add` and user-isolated `Search`. It stores every original
 message, builds traceable retrieval views, and returns ranked source evidence.
 It does not generate final answers.
+
+## 60-second demo
+
+No server, no API key, no third-party package. The database is in memory:
+
+```bash
+git clone https://github.com/aidless/flowgrid-aml-retriever.git
+cd flowgrid-aml-retriever
+python3 examples/demo_add_search.py
+```
+
+![Add/Search terminal demo](docs/assets/demo.gif)
+
+The demo adds three messages, retrieves the updated launch date and the owner,
+and shows that a second user gets zero hits. The full HTTP contract and the
+254-test suite are covered in the quick start below.
 
 ## Submission status
 
@@ -87,10 +105,10 @@ Requirements:
 - Python's `sqlite3` linked with FTS5
 
 ```bash
-git clone https://github.com/aidless/just-agent.git
-cd just-agent
+git clone https://github.com/aidless/flowgrid-aml-retriever.git
+cd flowgrid-aml-retriever
 
-# Environment check, 150 unit tests, CLI self-check, and 31 HTTP smoke checks
+# Environment check, 254 unit tests, CLI self-check, and 31 HTTP smoke checks
 ./scripts/run_tests.sh
 
 # Start on 127.0.0.1:8080 with ./aml.db
