@@ -1,0 +1,11 @@
+# Generated from static import analysis (see AUDIT.md provenance note).
+# Repo: aidless/flowgrid-aml-retriever
+# Only top-level third-party imports are listed; stdlib and in-repo modules are excluded.
+# Versions are intentionally unpinned unless a floor is required for API compatibility.
+
+locust  # loadtest/locust_temporal_cache_storm.py:19
+matplotlib  # examples/run_ablation_suite.py:15
+
+# --- optional / conditionally imported (guarded by try/except or lazily loaded) ---
+# fastembed  # aml_retriever/dense.py:47
+# numpy>=1.24  # aml_retriever/dense.py:30
