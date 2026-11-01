@@ -224,6 +224,62 @@ Search, statistics, and deletion endpoints.
 All ranking controls live in `RetrieverConfig` and can be disabled independently
 for ablation.
 
+## What this proves — and what it does not
+
+**This repo proves (on its synthetic + local proxy evaluation):**
+
+- The two required operations (`Add` / user-isolated `Search`) are implemented and
+  **deterministically testable**: 254 unit tests, 31 HTTP contract smoke checks, and
+  a CLI end-to-end self-check all pass, with zero third-party Python dependencies on
+  the default path.
+- Retrieval isolation by `user_id`, request-level idempotency, and the deletion
+  lifecycle hold under the shipped tests.
+- The deterministic, evidence-first pipeline reaches **Recall@20 = 0.9983 (0.9948–1.0000)
+  and MRR = 0.7785 (0.7427–0.8020)** on the synthetic mixed suite, and lifts
+  locomo10-proxy Recall@20 from 0.8958 to 0.9014 with MRR 0.6186→0.6203 (v1.1→v1.2).
+- A query-type-aware recency weight (v1.3) lifts locomo10-proxy MRR to 0.6324 and
+  synthetic L9 MRR to 0.7281 with Recall unchanged — the code-level change is present
+  in `config.py` / `retriever.py` and the measurement is documented in
+  `aml_retriever/evaluation/harness.py`.
+
+**This repo does *not* prove:**
+
+- Any **official leaderboard score**. It is submitted but "has not yet received an
+  official evaluation score"; every number above is development evidence.
+- That the retrieval is **semantically robust**. The default path is lexical and
+  deterministic; semantically distant paraphrases (especially temporal paraphrases)
+  remain the documented main weakness.
+- That guarded supersession **resolves truth**. It is a soft ranking signal; conflicting
+  and historical evidence remains stored and retrievable by design.
+- Any **horizontal scale** property. SQLite is single-node; WAL + retries + a read pool
+  handle the evaluated concurrency shape only.
+- That the v1.2/v1.3 **real-data gains generalize**. locomo10 is not vendored (the repo
+  contains synthetic fixtures and handwritten examples only); the locomo10-proxy and
+  end-to-end numbers come from an external dataset + a DeepSeek endpoint and are not
+  recomputable from this repository alone.
+
+## Reproduce the reported numbers
+
+**Fully recomputable from this repo** (no network, no external data):
+
+```bash
+# 254 unit tests + CLI self-check + 31 HTTP smoke
+./scripts/run_tests.sh
+
+# synthetic evaluation (medium/mixed, 3 seeds) — reproduces the R@20/MRR table
+python3 scripts/run_eval.py \
+  --scale medium --difficulty mixed --suite classic \
+  --seeds 20260806,20260807,20260808 --top-k 100
+# reports land in the ignored eval_out/ (CSV + REPORT_*.md); same seed => same data
+```
+
+**Not recomputable from this repo alone** (external inputs, stated honestly):
+
+- `locomo10.json` (1977-query real-data proxy) is **not vendored**; the R@20/R@100/MRR
+  rows that reference it come from an external run and are marked development evidence.
+- The end-to-end DeepSeek scores (0.6229 vs 0.5724) require a live endpoint + the
+  297-item stratified sample, not shipped here.
+
 ## Evaluation
 
 The repository includes a deterministic synthetic evaluation harness for
