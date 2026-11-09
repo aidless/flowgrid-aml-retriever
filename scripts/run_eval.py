@@ -42,6 +42,15 @@ CSV_COLUMNS = [
 PUBLIC_REPO = "flowgrid-aml-retriever"
 
 
+def portable_repo(payload: dict) -> str:
+    """Name to print in reproduction snippets. Never echo a checkout path."""
+    repo = str(payload.get("repo") or "")
+    drive = len(repo) > 2 and repo[1] == ":" and repo[2] in "\\/"
+    if not repo or repo.startswith(("/", "~")) or drive:
+        return PUBLIC_REPO
+    return repo
+
+
 def environment() -> dict:
     available, reason = vector_backend_available()
     return {
@@ -125,7 +134,7 @@ def write_report(path: str, payload: dict) -> None:
         "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for stage in payload["stages"]:
-        mark = " **(v1.1 代码默认)**" if stage["stage"] == PRODUCTION_STAGE else ""
+        mark = " **(当前代码默认)**" if stage["stage"] == PRODUCTION_STAGE else ""
         if stage["skipped"]:
             lines.append(f"| `{stage['stage']}`{mark} | 跳过 | 跳过 | 跳过 | 跳过 | — | — | — |")
             continue
@@ -139,8 +148,8 @@ def write_report(path: str, payload: dict) -> None:
         )
     lines += [
         "",
-        f"> `{PRODUCTION_STAGE}` 即 v1.1 `DEFAULT_FLAGS` 的实际配置；"
-        f"`{CONTROL_STAGE}` 是 v1.0 默认基线。`L6_temporal_intent_ctrl` 与 "
+        f"> `{PRODUCTION_STAGE}` 是当前 `DEFAULT_FLAGS`（历史 v1.1 档是 L9，不是这一档）；"
+        f"`{CONTROL_STAGE}` 是对照组（v1.0 基线）。`L6_temporal_intent_ctrl` 与 "
         "`L8_supersession_ctrl` 分别保留为时间意图放大负对照、无保护覆写安全对照。",
     ]
 
@@ -159,7 +168,7 @@ def write_report(path: str, payload: dict) -> None:
             )
             lines.append(f"| `{stage['stage']}` | {cells} |")
 
-    lines += ["", "## 3. 分查询类型明细（v1.1 代码默认档位）", ""]
+    lines += ["", "## 3. 分查询类型明细（当前代码默认档位）", ""]
     # 必须锁定 PRODUCTION_STAGE（代码默认），不能取"最后一个未跳过档位"。
     # 梯度里仍有多个后置实验档，不能用“最后一个未跳过档位”冒充生产配置。
     final = next(
@@ -172,13 +181,13 @@ def write_report(path: str, payload: dict) -> None:
         final = next((s for s in payload["stages"] if not s["skipped"]), None)
         if final is not None:
             fallback_note = (
-                f"（⚠️ v1.1 代码默认档位 `{PRODUCTION_STAGE}` 本次未运行，"
+                f"（⚠️ 当前代码默认档位 `{PRODUCTION_STAGE}` 本次未运行，"
                 f"以下为回退展示的 `{final['stage']}`，**不代表代码默认**）"
             )
     if final:
         lines += [
             f"档位：`{final['stage']}`"
-            + ("（**v1.1 代码默认 / production config**）" if not fallback_note else fallback_note),
+            + ("（**当前代码默认 / production config**）" if not fallback_note else fallback_note),
             "",
             "| 查询类型 | 条数 | Recall@20 | Recall@100 | MRR | 旧值泄漏@10 |",
             "| --- | --- | --- | --- | --- | --- |",
@@ -201,9 +210,9 @@ def write_report(path: str, payload: dict) -> None:
         )
         lines += [
             "",
-            f"> **档位角色**：`{PRODUCTION_STAGE}` = v1.1 代码默认（`DEFAULT_FLAGS` 实配）；"
-            f"`{CONTROL_STAGE}` = v1.0 对照基线（control），其 guarded supersession 默认**关闭**，"
-            "用于量化 v1.1 变更，不参与 v1.1 线上返回。",
+            f"> **档位角色**：`{PRODUCTION_STAGE}` = 当前代码默认（`DEFAULT_FLAGS` 实配）；"
+            f"`{CONTROL_STAGE}` = 对照组（v1.0 基线），其 guarded supersession 默认**关闭**。"
+            "该对照只量化相对差异，不是官方分数。",
         ]
         if control:
             lines.append(
@@ -228,7 +237,7 @@ def write_report(path: str, payload: dict) -> None:
         "## 5. 复现命令",
         "",
         "```bash",
-        f"cd {payload['repo']}",
+        f"cd {portable_repo(payload)}",
         f"python3 scripts/run_eval.py --scale {ds['scale']} "
         f"--difficulty {ds['difficulty']} --suite {ds.get('suite', 'classic')} "
         f"--seed {ds['seed']} --top-k {payload['top_k']}",
@@ -264,7 +273,7 @@ def write_multiseed_report(path: str, payload: dict) -> None:
     per_seed = payload["per_seed"]
     agg_by_stage = {a["stage"]: a for a in aggregate}
 
-    # 每个 seed 的 v1.1 代码默认档位指标，用于 §3 逐 seed 稳定性展示
+    # 每个 seed 的当前代码默认档位指标，用于 §3 逐 seed 稳定性展示
     seed_summaries = []
     for ps in per_seed:
         for sr in ps:
@@ -305,7 +314,7 @@ def write_multiseed_report(path: str, payload: dict) -> None:
         "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     for a in aggregate:
-        mark = " **(v1.1 代码默认)**" if a["stage"] == PRODUCTION_STAGE else ""
+        mark = " **(当前代码默认)**" if a["stage"] == PRODUCTION_STAGE else ""
         if a["skipped"]:
             lines.append(f"| `{a['stage']}`{mark} | 跳过 | 跳过 | 跳过 | 跳过 | 跳过 | 跳过 |")
             continue
@@ -347,7 +356,7 @@ def write_multiseed_report(path: str, payload: dict) -> None:
         "| --- | --- | --- | --- | --- |",
     ]
     role_of = {
-        PRODUCTION_STAGE: "v1.1 代码默认",
+        PRODUCTION_STAGE: "当前代码默认",
         CONTROL_STAGE: "v1.0 基线",
         "L8_supersession_ctrl": "无保护安全对照",
     }
@@ -365,13 +374,13 @@ def write_multiseed_report(path: str, payload: dict) -> None:
         )
     lines += [
         "",
-        "> **v1.1 说明**：`L8_supersession_ctrl` 只看话题重合与时间，作为无保护安全对照；"
-        f"`{PRODUCTION_STAGE}` 进一步要求显式更新语义，并使用保守 4/1 权重。两者都只做软重排，"
+        "> **说明**：`L8_supersession_ctrl` 只看话题重合与时间，作为无保护安全对照。"
+        "L9 才是「显式更新语义 + 保守 4/1」的历史档。两者都只做软重排，"
         "不安装依赖、不做 confirmed-only 过滤，也不删除旧证据。",
-        f"> 只有 `{PRODUCTION_STAGE}` 在跨 seed 上同时守住召回门并提升 MRR，才可标记为 v1.1 默认；"
-        "官方数据上的效果仍必须写为 unknown，不能用本合成代理集代替官方验证。",
+        f"> `{PRODUCTION_STAGE}` 是当前代码默认，不是「v1.1 默认」这个历史名称。"
+        "合成代理集上的升降不能代替官方验证；官方数据上的效果仍是 unknown。",
         "",
-        "## 3. 逐 seed 稳定性（v1.1 代码默认档位 " + PRODUCTION_STAGE + "）",
+        "## 3. 逐 seed 稳定性（当前代码默认档位 " + PRODUCTION_STAGE + "）",
         "",
         "| seed | Recall@20 | Recall@100 | MRR | 旧值泄漏@10 | p50 (ms) | p95 (ms) |",
         "| --- | --- | --- | --- | --- | --- | --- |",
@@ -401,7 +410,7 @@ def write_multiseed_report(path: str, payload: dict) -> None:
         f"`ablation_{scale}_{difficulty}_multiseed_per_seed.csv`。临时索引库跑完即删。",
         "",
         "```bash",
-        f"cd {payload['repo']}",
+        f"cd {portable_repo(payload)}",
         f"python3 scripts/run_eval.py --scale {scale} --difficulty {difficulty} "
         f"--suite {suite} --seeds {','.join(str(s) for s in seeds)} --top-k {top_k}",
         "```",

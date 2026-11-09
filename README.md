@@ -2,24 +2,33 @@
 
 [![CI](https://github.com/aidless/flowgrid-aml-retriever/actions/workflows/checks.yml/badge.svg)](https://github.com/aidless/flowgrid-aml-retriever/actions/workflows/checks.yml)
 
-> Repository: `flowgrid-aml-retriever` · service name: `just-agent`.
+> Repository: `flowgrid-aml-retriever` · service name: `just-agent` · package `1.1.0` · HTTP banner `aml-retriever/1.1`.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Deterministic, evidence-first memory retrieval for the
-[Agent Memory Leaderboard](https://agentmemories.ai/leaderboard/).
-
 [中文说明](README.zh-CN.md) · [API contract](docs/API_CONTRACT.md) ·
-[Evaluation methodology](docs/EVAL.md) · [Data lifecycle](docs/DATA_LIFECYCLE.md)
+[Evaluation methodology](docs/EVAL.md) · [Failure modes](docs/FAILURE_MODES.md) ·
+[Data lifecycle](docs/DATA_LIFECYCLE.md)
 
-just-agent implements the two operations required from a memory
-system: synchronous `Add` and user-isolated `Search`. It stores every original
-message, builds traceable retrieval views, and returns ranked source evidence.
-It does not generate final answers.
+## STATUS: WORK-IN-PROGRESS — not A yet
 
-## 60-second demo
+Submitted to the Agent Memory Leaderboard (Text Memory · Open-source / Academic Methods) as a first-time entry. There is no official score. This file will not invent one. Local synthetic Recall and MRR are not that score.
 
-No server, no API key, no third-party package. The database is in memory:
+Still open:
+
+- No official leaderboard score. The entry is unscored.
+- LoCoMo-style and DeepSeek notes below cite datasets that are not in this clone. `scripts/run_eval.py` does not reproduce them.
+- Current `DEFAULT_FLAGS` enable `ebbinghaus_decay` and `consolidation_dedup`. The historical L12 row in the table below was not measured with that flag set.
+
+## Problem
+
+just-agent guarantees a synchronous Add (the write is stored and searchable before success) and a Search that returns ranked source evidence for exactly one `user_id`.
+It does not generate an answer, does not delete older evidence when a fact changes, and has no official Agent Memory Leaderboard score.
+The tests lock that contract; other numbers in this repository are development evidence only.
+
+## Offline demo (no server)
+
+No API key and no third-party package. The database stays in memory. This path does not start HTTP.
 
 ```bash
 git clone https://github.com/aidless/flowgrid-aml-retriever.git
@@ -29,95 +38,37 @@ python3 examples/demo_add_search.py
 
 ![Add/Search terminal demo](docs/assets/demo.gif)
 
-The demo adds three messages, retrieves the updated launch date and the owner,
-and shows that a second user gets zero hits. The full HTTP contract and the
-254-test suite are covered in the quick start below.
+The demo adds three messages, prints two searches, and checks that a second user gets zero hits.
 
-## Submission status
+## Tests and CI
 
-This repository is submitted to the Agent Memory Leaderboard
-(Text Memory · Open-source / Academic Methods track) as a first-time entry.
-It has not yet received an official evaluation score. The current version is
-v1.4. Compared with earlier iterations it adds guarded, evidence-backed changes
-on top of the same deterministic core: temporal
-fallback for messages without timestamps, a day-level event-time prefix on
-returned evidence that is applied only when the query has temporal context
-(see [docs/EVAL.md](docs/EVAL.md)), a query-type-aware recency weight
-(plain non-temporal queries get 2.0 instead of 8.0), and a time-anchor
-fallback fix so aggregate views correctly fall back to message timestamps
-when no in-body time expression exists (v1.4; local paired end-to-end
-reproduction +5.3pp on the same slice). These changes have local synthetic,
-retrieval-proxy, and end-to-end evidence but have not been assigned a new
-official score.
+pytest collects 264 tests in `tests/` (unittest discover reports Ran 260 when the four Ollama tests are a class-level skip).
 
-## What it does
-
-- Synchronously persists each `Add` request before returning success.
-- Makes newly added memories immediately searchable.
-- Enforces strict retrieval isolation by `user_id`.
-- Replays duplicate `(request_id, user_id)` writes idempotently.
-- Preserves every original message and links derived views back to source IDs.
-- Combines SQLite FTS5, Chinese character n-grams, exact entities, numbers,
-  dates, temporal signals, adjacency, reciprocal-rank fusion, and deduplication.
-- Applies guarded temporal supersession as a soft ranking signal; older evidence
-  remains stored and retrievable.
-- Falls back to content/anchor-derived event times when a message has no
-  timestamp (`temporal_fallback`), and prefixes returned evidence with a
-  day-level event date when the query has temporal context
-  (`content_timestamp_prefix`, gated by `has_temporal_context`) so the answer
-  model can use it on temporal questions without altering stored text.
-- Runs with Python's standard library and SQLite FTS5, with no third-party
-  Python package in the default path.
-
-## Architecture
-
-```text
-HTTP Add/Search
-      │
-      ▼
-Contract validation and field mapping
-      │
-      ▼
-Memory service
-  ├─ user isolation
-  ├─ idempotency
-  └─ deletion lifecycle
-      │
-      ▼
-Evidence retriever
-  ├─ original messages
-  ├─ sliding windows
-  ├─ session segments
-  ├─ FTS5 and deterministic features
-  └─ fusion, temporal reranking, provenance, deduplication
-      │
-      ▼
-Ranked source evidence — no answer generation
-```
-
-The HTTP wrapper is intentionally separate from the retrieval engine. Protocol
-changes remain in `api.py` and `server.py`; storage and ranking stay independently
-testable.
-
-## Quick start
-
-Requirements:
-
-- Python 3.11 or newer
-- Python's `sqlite3` linked with FTS5
+- [`.github/workflows/checks.yml`](.github/workflows/checks.yml) — Python 3.10 and 3.12. First `python -m unittest discover -s tests` (no extra packages), then `python -m pytest tests`.
+- [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — Python 3.12, `python -m pytest tests`, a mutation control that must fail on a corrupted test file, and gitleaks.
 
 ```bash
-git clone https://github.com/aidless/flowgrid-aml-retriever.git
-cd flowgrid-aml-retriever
-
-# Environment check, 254 unit tests, CLI self-check, and 31 HTTP smoke checks
+python3 examples/demo_add_search.py
+python3 -m unittest discover -s tests
+python3 -m pytest tests -q
 ./scripts/run_tests.sh
+```
 
-# Start on 127.0.0.1:8080 with ./aml.db
+`./scripts/run_tests.sh` is the environment check, the unit suite, a CLI self-check, and 31 HTTP smoke checks. It does not run the ablation unless you pass `--with-eval`. Pytest is optional for a fresh clone; the demo and unittest need only the standard library and SQLite FTS5. `pytest.ini` sets `testpaths = tests` so `examples/test_*.py` are not part of the count.
+
+## HTTP server (separate path)
+
+Python 3.10 or newer (the checks workflow runs 3.10 and 3.12) with SQLite FTS5. No `pip install` for the server itself.
+
+```bash
 ./scripts/serve.sh
 ```
 
-No `pip install` step is required.
+The process listens on `127.0.0.1:8080` and uses `./aml.db`. Contract checks against a throwaway server:
+
+```bash
+python3 scripts/smoke_api.py
+```
 
 ### Add a memory
 
@@ -178,8 +129,57 @@ curl -sS http://127.0.0.1:8080/search \
 }
 ```
 
-`view`, `source_message_ids`, and `evidence_flags` provide optional provenance.
+`score` in the sample is a response-shape placeholder, not a measured result. `view`, `source_message_ids`, and `evidence_flags` provide optional provenance.
 Set `AML_INCLUDE_PROVENANCE=0` to omit them.
+
+## What it does
+
+- Synchronously persists each `Add` request before returning success.
+- Makes newly added memories immediately searchable.
+- Enforces strict retrieval isolation by `user_id`.
+- Replays duplicate `(request_id, user_id)` writes idempotently.
+- Preserves every original message and links derived views back to source IDs.
+- Combines SQLite FTS5, Chinese character n-grams, exact entities, numbers,
+  dates, temporal signals, adjacency, reciprocal-rank fusion, and deduplication.
+- Applies guarded temporal supersession as a soft ranking signal; older evidence
+  remains stored and retrievable.
+- Falls back to content/anchor-derived event times when a message has no
+  timestamp (`temporal_fallback`), and prefixes returned evidence with a
+  day-level event date when the query has temporal context
+  (`content_timestamp_prefix`, gated by `has_temporal_context`) so the answer
+  model can use it on temporal questions without altering stored text.
+- Runs with Python's standard library and SQLite FTS5, with no third-party
+  Python package in the default path.
+
+## Architecture
+
+```text
+HTTP Add/Search
+      │
+      ▼
+Contract validation and field mapping
+      │
+      ▼
+Memory service
+  ├─ user isolation
+  ├─ idempotency
+  └─ deletion lifecycle
+      │
+      ▼
+Evidence retriever
+  ├─ original messages
+  ├─ sliding windows
+  ├─ session segments
+  ├─ FTS5 and deterministic features
+  └─ fusion, temporal reranking, provenance, deduplication
+      │
+      ▼
+Ranked source evidence — no answer generation
+```
+
+The HTTP wrapper is intentionally separate from the retrieval engine. Protocol
+changes remain in `api.py` and `server.py`; storage and ranking stay independently
+testable.
 
 ## Docker
 
@@ -228,39 +228,20 @@ for ablation.
 
 ## Evaluation
 
-The repository includes a deterministic synthetic evaluation harness for
-regression testing and ablation. These metrics are development evidence, not a
-substitute for the official leaderboard score.
+The table is a historical local run of the synthetic `classic` suite (medium, mixed, seeds 20260806–20260808, `top_k=100`) via `scripts/run_eval.py`. It is not an official score. The L11 and L12 rows match because that run did not include today's extra default flags `ebbinghaus_decay` and `consolidation_dedup`. This repository has no re-measurement of the current flag set, so the L12 row is not the current default. Limits: [docs/FAILURE_MODES.md](docs/FAILURE_MODES.md) and [docs/EVAL.md](docs/EVAL.md).
 
 `classic`, medium, mixed difficulty, seeds 20260806–20260808, `top_k=100`:
 
 | Configuration | Recall@20 mean (range) | Recall@100 | MRR mean (range) |
 | --- | ---: | ---: | ---: |
-| v1.0 baseline (`L5_plus_weighted_rrf`) | 0.9948 (0.9870–1.0000) | 1.0000 | 0.6728 (0.6631–0.6791) |
-| v1.1 guarded supersession (`L9_guarded_supersession`) | 0.9948 (0.9870–1.0000) | 1.0000 | 0.6948 (0.6854–0.7004) |
-| v1.2 production (`L11_v12_production`) | 0.9983 (0.9948–1.0000) | 1.0000 | 0.7785 (0.7427–0.8020) |
-| v1.3 production (`L12_v13_production`) | 0.9983 (0.9948–1.0000) | 1.0000 | 0.7785 (0.7427–0.8020) |
+| L5 baseline (`L5_plus_weighted_rrf`) | 0.9948 (0.9870–1.0000) | 1.0000 | 0.6728 (0.6631–0.6791) |
+| L9 guarded supersession (`L9_guarded_supersession`) | 0.9948 (0.9870–1.0000) | 1.0000 | 0.6948 (0.6854–0.7004) |
+| historical L11 snapshot (`L11_v12_production`) | 0.9983 (0.9948–1.0000) | 1.0000 | 0.7785 (0.7427–0.8020) |
+| historical L12 snapshot, not today's flags (`L12_v13_production`) | 0.9983 (0.9948–1.0000) | 1.0000 | 0.7785 (0.7427–0.8020) |
 
-The v1.2 default adds `temporal_fallback` and `content_timestamp_prefix` on top
-of v1.1 (the prefix is gated by query temporal context since v1.2.1): Recall@20
-is preserved across all three seeds while MRR improves on each seed. On real
-LoCoMo-style data (locomo10.json, 1977 queries, `top_k=100`) the v1.2 default
-raises Recall@20 from 0.8958 to 0.9014, Recall@100 from 0.9540 to 0.9580, and
-MRR from 0.6186 to 0.6203. An end-to-end local reproduction (DeepSeek official
-`deepseek-v4-flash` answers judged by `deepseek-v4-pro`, 297-item stratified
-sample) scores 0.6229 vs 0.5724 for the v1.1 default; the query-gated variant
-(v1.2.1) is neutral-to-positive overall (+1.35 pp paired) and removes the
-non-temporal regression (multi-hop category +0.06).
+Unverified external notes, not rerun from this clone (`locomo10.json` is not in the tree; `scripts/run_eval.py` does not produce these figures): a LoCoMo-style note says v1.2 moved Recall@20 from 0.8958 to 0.9014, Recall@100 from 0.9540 to 0.9580, and MRR from 0.6186 to 0.6203 (1977 queries, `top_k=100`). A DeepSeek note (flash answers, pro judge, 297-item sample) says 0.6229 vs 0.5724, with a later gated-prefix note of +1.35 pp on that same local sample. A further note says a code-level recency weight (plain queries 2.0 instead of 8.0) moved locomo10 MRR from 0.6203 to 0.6324 and a synthetic L9 MRR from 0.6854 to 0.7281. Treat every one of those as an unscored local note.
 
-v1.3 adds a **query-type-aware recency weight** at the code level (plain
-non-temporal queries use 2.0 instead of 8.0; temporal-intent queries keep 8.0):
-locomo10 MRR rises from 0.6203 to 0.6324 (R@20 0.9074 / R@100 0.9565), and the
-synthetic L9 MRR rises from 0.6854 to 0.7281 with Recall unchanged. The flag set
-is identical to v1.2.1: `preference_role_boost` was briefly enabled during v1.3
-development but reverted after paired same-sample gates (slices 50/100/200,
-bit-identical with the flag off) showed the apparent gain was sample variance.
-These are development evidence;
-only an official run can establish a new official score.
+`preference_role_boost` was enabled briefly and then turned back off after paired same-sample checks (slices 50/100/200, bit-identical with the flag off) showed the apparent gain was sample variance. It stays off. None of this is an official score.
 
 Reproduce a run with:
 
@@ -309,8 +290,7 @@ does not contain leaderboard evaluation data.
 - SQLite is a single-node backend. WAL mode, retries, and a read pool handle the
   evaluated concurrency shape, but the implementation is not horizontally
   distributed.
-- Synthetic evaluation supports controlled comparison; only an official run can
-  establish an official score for a new version.
+- Synthetic evaluation supports controlled comparison. It is not an official score. See [docs/FAILURE_MODES.md](docs/FAILURE_MODES.md).
 
 ## Repository layout
 
@@ -334,6 +314,7 @@ scripts/
 docs/
   API_CONTRACT.md
   EVAL.md
+  FAILURE_MODES.md
   DATA_LIFECYCLE.md
 Dockerfile
 config.example.json
