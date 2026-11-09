@@ -1,5 +1,30 @@
 # 离线评测方法与证据
 
+## Methodology limits
+
+This harness scores a synthetic proxy that this repository generates. A high
+Recall@20 on that proxy is not an official Agent Memory Leaderboard score.
+`./scripts/run_tests.sh` does not run the multi-seed ablation unless
+`--with-eval` is passed. A green unit run is not a leaderboard result.
+
+- **False greens.** Gold messages are written with the entities, dates, and
+  update phrasing the ranker rewards. Near-perfect classic Recall checks that
+  generator. It does not transfer to official items.
+- **User isolation.** FTS stores `user_id` as `UNINDEXED`. Isolation is the
+  SQL predicate on one shared table, not a separate database per user. The
+  demo's second-user check is one query.
+- **Temporal heuristics.** `temporal_intent` stays off (negative control).
+  Paraphrased temporal queries are the weak cell in appendix B. The
+  content-time prefix is day-level and gated; it does not change stored text.
+  Flags that comments call v1.4 default off. Package version is
+  `aml_retriever.__version__` (`1.1.0`), not those comment labels.
+
+Run the commands below from the repository root. Generated reports print the
+name `flowgrid-aml-retriever` and must not embed a machine checkout path.
+See [FAILURE_MODES.md](FAILURE_MODES.md). The README's L12 row is a historical
+synthetic snapshot; current defaults also enable `ebbinghaus_decay` and
+`consolidation_dedup`, which that row does not measure.
+
 本文件记录 `DEFAULT_FLAGS` 主要取值的本地消融证据。所有数字都由仓库脚本使用
 100% 合成数据生成，可用同一 seed 复现；没有任何官方评测数据参与。
 
@@ -235,7 +260,7 @@ v1.1 将两个问题拆开评测：
 ## 6. 复现清单
 
 ```bash
-cd aml-retriever
+# 在仓库根目录执行。不要把本机绝对路径写进报告。
 python3 -m unittest discover -s tests            # 全量测试
 python3 scripts/smoke_api.py                     # HTTP 契约 smoke（自起临时服务）
 python3 scripts/run_eval.py  --scale medium --difficulty mixed  --seed 20260806 --top-k 100

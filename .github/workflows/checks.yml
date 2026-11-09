@@ -13,4 +13,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m unittest discover -s tests -v
+      - name: Zero-dependency unittest (fresh clone, no pytest)
+        # Discovers the same tests/ tree. A class-level SkipTest on
+        # TestDenseNomicIntegration prints one skip, so the "Ran" line is
+        # four below the pytest collection count. tests/test_honesty_drift.py
+        # locks the documented numbers to the loader count.
+        run: python -m unittest discover -s tests -v
+      - name: Pytest collection (canonical count)
+        run: |
+          python -m pip install pytest
+          python -m pytest tests -q

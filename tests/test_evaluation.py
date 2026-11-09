@@ -379,6 +379,15 @@ class TestReportStageRoles(unittest.TestCase):
         self.assertIn("代码默认", production_row)
         self.assertNotIn("代码默认", control_row)
 
+    def test_report_does_not_embed_checkout_path(self):
+        """复现片段只写仓库名，不写调用方塞进来的本机路径。"""
+        text = self._render([
+            _stage_payload(PRODUCTION_STAGE, 0.6631, 1.0),
+        ])
+        self.assertNotIn("/tmp/repo", text)
+        self.assertNotRegex(text, r"cd\s+/")
+        self.assertIn("cd flowgrid-aml-retriever", text)
+
     def test_skipped_production_falls_back_with_warning(self):
         """代码默认档位未运行时必须显式告警，不得静默冒充。"""
         skipped = _stage_payload(PRODUCTION_STAGE, 0.0, 0.0)
