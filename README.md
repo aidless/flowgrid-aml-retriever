@@ -1,5 +1,7 @@
 # flowgrid-aml-retriever
 
+[![CI](https://github.com/aidless/flowgrid-aml-retriever/actions/workflows/checks.yml/badge.svg)](https://github.com/aidless/flowgrid-aml-retriever/actions/workflows/checks.yml)
+
 > Repository: `flowgrid-aml-retriever` · service name: `just-agent`.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
