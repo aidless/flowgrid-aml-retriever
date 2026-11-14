@@ -1,0 +1,129 @@
+{
+ "total": 20,
+ "passed": 20,
+ "failed": 0,
+ "selftest": false,
+ "failed_by_axis": {},
+ "results": [
+  {
+   "id": "STORE-01",
+   "axis": "store/分词",
+   "ok": true,
+   "detail": "8"
+  },
+  {
+   "id": "FEAT-01",
+   "axis": "features/索引串",
+   "ok": true,
+   "detail": "林 岚 的 预 算 林岚 预算"
+  },
+  {
+   "id": "INTENT-01",
+   "axis": "features/意图",
+   "ok": true,
+   "detail": "True"
+  },
+  {
+   "id": "INTENT-02",
+   "axis": "features/意图",
+   "ok": true,
+   "detail": "False"
+  },
+  {
+   "id": "INTENT-03",
+   "axis": "features/意图",
+   "ok": true,
+   "detail": "True"
+  },
+  {
+   "id": "VIEW-01",
+   "axis": "views/窗口",
+   "ok": true,
+   "detail": "5"
+  },
+  {
+   "id": "ABS-01",
+   "axis": "temporal/绝对时间",
+   "ok": true,
+   "detail": "1786665600.0"
+  },
+  {
+   "id": "FB-01",
+   "axis": "temporal/兜底链",
+   "ok": true,
+   "detail": "1760000000.123"
+  },
+  {
+   "id": "MD-01",
+   "axis": "temporal/月日锚点",
+   "ok": true,
+   "detail": "1756339200.0"
+  },
+  {
+   "id": "CFG-01",
+   "axis": "config/默认旗标",
+   "ok": true,
+   "detail": "14"
+  },
+  {
+   "id": "MET-01",
+   "axis": "metrics/分位",
+   "ok": true,
+   "detail": "99.01"
+  },
+  {
+   "id": "MET-02",
+   "axis": "metrics/召回",
+   "ok": true,
+   "detail": "0.5"
+  },
+  {
+   "id": "DS-01",
+   "axis": "dataset/合成集",
+   "ok": true,
+   "detail": "192"
+  },
+  {
+   "id": "LAD-01",
+   "axis": "harness/消融阶梯",
+   "ok": true,
+   "detail": "17"
+  },
+  {
+   "id": "API-01",
+   "axis": "api/契约校验",
+   "ok": true,
+   "detail": "raised ApiError"
+  },
+  {
+   "id": "API-02",
+   "axis": "api/契约校验",
+   "ok": true,
+   "detail": "100"
+  },
+  {
+   "id": "ENG-01",
+   "axis": "engine/用户隔离",
+   "ok": true,
+   "detail": "0"
+  },
+  {
+   "id": "DOC-01",
+   "axis": "doc/接口契约",
+   "ok": true,
+   "detail": "## 4. POST Search"
+  },
+  {
+   "id": "DOC-02",
+   "axis": "doc/README 口径",
+   "ok": true,
+   "detail": "254 unit tests"
+  },
+  {
+   "id": "DOC-03",
+   "axis": "doc/评测口径",
+   "ok": true,
+   "detail": "附录 E — v1.1 显式更新保护"
+  }
+ ]
+}

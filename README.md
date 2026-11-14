@@ -405,3 +405,29 @@ evidence only and does not generate final answers.
 ## License
 
 Licensed under the [MIT License](LICENSE).
+
+## 验收题库与复算
+
+`eval/cases.jsonl` 是 20 条可执行验收题，覆盖九个模块的关键口径：`store` 分词、
+`features` 索引串与意图门控（时间 / current-value / 时间上下文）、`views` 窗口起点、
+`temporal_fallback` 绝对时间与分级兜底链、无年份月日锚点、`config` 默认旗标计数、
+`evaluation/metrics` 分位与 Recall@k 口径、合成数据集规模、消融阶梯档数、
+`api` 契约校验（含必抛 `ApiError` 的负例）、`engine` 用户隔离，以及三处文档口径
+（`docs/API_CONTRACT.md` / `README.md` / `docs/EVAL.md`）。16 条 `expr` + 1 条
+`raises` 都是**真调本仓库 API** 现算，期望值不是抄文档：
+
+```bash
+python3 eval/run_cases.py            # 20/20 cases passed
+python3 eval/run_cases.py --save     # 顺带把结果写进 eval/run-report.json
+python3 eval/run_cases.py --selftest # 篡改第一条期望值，必须变红（19/20，证明这套题会失败）
+```
+
+**数字如何复算**：`eval/run-report.json` 里每条 case 都带 `id` / `axis` / `detail`，
+把 `detail` 与 `cases.jsonl` 的 `verify` 代码一起看，就能从源码复现该数字（例如
+`MET-01` 的 `99.01` 就是 `metrics.percentile(list(range(1, 101)), 99)` 的返回值）；
+`--save` 重跑一次即可重建整份报告，不需要手工抄数。数值比较对 int/float 留 1e-9
+容差，字符串比较走 strip 后全等，其余按字面。
+
+**失败归因**：`run_cases.py` 不只报通过率，失败时按 `axis` 汇总（例如
+`store/分词: 1 条 —— STORE-01`），直接指出是哪个模块的哪个口径坏了；`--selftest`
+走的就是这条路径——它把第一条改成不可能的值，必须红成 19/20，红了才说明这套题不是装饰。
