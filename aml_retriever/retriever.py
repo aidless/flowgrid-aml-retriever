@@ -39,7 +39,6 @@ from .temporal_fallback import (
 from .views import (
     affected_window_starts,
     join_content,
-    scope_key,
     segment_view_id,
     window_view_id,
 )

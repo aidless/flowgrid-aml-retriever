@@ -5,7 +5,6 @@ assert / update / retract 事件。每次事件都会递增 timeline_revision，
 """
 from __future__ import annotations
 
-import json
 import sqlite3
 import uuid
 from dataclasses import dataclass

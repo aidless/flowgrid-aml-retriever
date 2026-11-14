@@ -21,7 +21,6 @@ from aml_retriever.retriever import RetrieverDB
 from aml_retriever.dense import (
     nomic_backend_available,
     nomic_reset_availability_cache,
-    NomicDenseIndex,
 )
 
 

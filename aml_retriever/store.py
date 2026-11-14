@@ -33,7 +33,6 @@ API 字段契约（"核对 API 字段"）：
 """
 from __future__ import annotations
 
-import json
 import os
 import re
 import sqlite3

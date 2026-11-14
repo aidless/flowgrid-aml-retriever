@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from ..config import RetrieverConfig, DEFAULT_FLAGS, vector_backend_available
 from ..retriever import RetrieverDB
 from . import metrics as M
-from .dataset import Dataset, make_dataset, SCALES
+from .dataset import Dataset, make_dataset
 
 # 官方披露的生产参数：Add 以 20 条消息为一块切分
 ADD_CHUNK_SIZE = 20

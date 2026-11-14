@@ -14,7 +14,7 @@ import unittest
 
 from aml_retriever.config import DEFAULT_FLAGS
 from aml_retriever.evaluation import metrics as M
-from aml_retriever.evaluation.dataset import DIFFICULTIES, SCALES, SUITES, make_dataset
+from aml_retriever.evaluation.dataset import DIFFICULTIES, SCALES, make_dataset
 from aml_retriever.evaluation.harness import (
     ABLATION_LADDER, CONTROL_STAGE, MAINLINE_STAGES, PRODUCTION_STAGE,
     build_index, run_stage,

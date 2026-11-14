@@ -30,7 +30,7 @@ from aml_retriever.evaluation import make_dataset, SCALES, SUITES  # noqa: E402
 from aml_retriever.evaluation.dataset import DIFFICULTIES          # noqa: E402
 from aml_retriever.evaluation.harness import (                     # noqa: E402
     ABLATION_LADDER, CONTROL_STAGE, OFFICIAL_TOP_K, PRODUCTION_STAGE, run_ladder,
-    aggregate_across_seeds, run_ladder_seeds,
+    run_ladder_seeds,
 )
 
 CSV_COLUMNS = [

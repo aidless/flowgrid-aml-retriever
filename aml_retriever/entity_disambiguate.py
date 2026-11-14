@@ -33,8 +33,7 @@ L4  共现验证：对高权重实体，要求其在记忆中与查询的另一�
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
-from typing import Sequence
+from dataclasses import dataclass
 
 
 # ─────────────────────────────────────────────────────────────────────────────

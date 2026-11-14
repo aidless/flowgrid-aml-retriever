@@ -34,7 +34,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
